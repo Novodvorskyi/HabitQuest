@@ -8,7 +8,6 @@ on:
 
 jobs:
   test:
-    name: Run Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -19,20 +18,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+
+      - name: Go to backend
+        run: cd backend && pwd
 
       - name: Install dependencies
-        working-directory: backend
-        run: npm install
+        run: cd backend && npm install
 
       - name: Run tests
-        working-directory: backend
-        run: npm test
+        run: cd backend && npm test
         env:
           JWT_SECRET: test_secret_for_ci
           MONGO_URI: mongodb://localhost/test
           RABBITMQ_URL: amqp://localhost
 
       - name: Run coverage
-        working-directory: backend
-        run: npm run test:coverage
+        run: cd backend && npm run test:coverage
