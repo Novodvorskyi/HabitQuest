@@ -244,3 +244,4 @@ npm run test:coverage
 4. При push в `main` — генерує звіт покриття
 
 Статус можна бачити у вкладці **Actions** на GitHub.
+trigger CI
