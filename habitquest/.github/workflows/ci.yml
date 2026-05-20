@@ -10,10 +10,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: backend
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,15 +19,24 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Show structure (debug)
+        run: ls -R
+
       - name: Install dependencies
-        run: npm install
+        run: |
+          cd backend
+          npm install
 
       - name: Run tests
-        run: npm test
+        run: |
+          cd backend
+          npm test
         env:
           JWT_SECRET: test_secret_for_ci
           MONGO_URI: mongodb://localhost/test
           RABBITMQ_URL: amqp://localhost
 
       - name: Run coverage
-        run: npm run test:coverage
+        run: |
+          cd backend
+          npm run test:coverage
