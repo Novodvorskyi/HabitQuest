@@ -36,7 +36,3 @@ jobs:
       - name: Run coverage
         working-directory: backend
         run: npm run test:coverage
-
-      - name: Install dependencies
-    working-directory: backend
-    run: npm install
