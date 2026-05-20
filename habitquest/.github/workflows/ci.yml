@@ -1,0 +1,42 @@
+name: CI — HabitQuest
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm install
+
+      - name: Run tests
+        working-directory: backend
+        run: npm test
+        env:
+          JWT_SECRET: test_secret_for_ci
+          MONGO_URI: mongodb://localhost/test
+          RABBITMQ_URL: amqp://localhost
+
+      - name: Run coverage
+        working-directory: backend
+        run: npm run test:coverage
+
+      - name: Install dependencies
+    working-directory: backend
+    run: npm install
