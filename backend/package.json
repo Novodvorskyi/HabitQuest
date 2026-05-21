@@ -14,13 +14,10 @@
     "testMatch": [
       "**/tests/**/*.test.js"
     ],
-    "collectCoverageFrom": [
-      "controllers/**/*.js",
-      "repositories/**/*.js",
-      "config/**/*.js",
-      "middleware/**/*.js",
-      "services.js",
-      "broker.js"
+  "collectCoverageFrom": [
+  "**/*.js",
+  "!node_modules/**",
+  "!tests/**"
     ],
     "coverageReporters": [
       "text",
