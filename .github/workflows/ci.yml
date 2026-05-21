@@ -6,48 +6,49 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Клонуємо репозиторій
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. Встановлюємо Node.js (без cache щоб уникнути помилки lock file)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # 3. Встановлюємо залежності
       - name: Install dependencies
         working-directory: backend
         run: npm install
 
-      # 4. Запускаємо тести
-      - name: Run tests
+      - name: Install jest-junit
         working-directory: backend
-        run: npm test
+        run: npm install --save-dev jest-junit
+
+      - name: Create reports directory
+        run: mkdir -p backend/reports
+
+      - name: Run tests with coverage and junit report
+        working-directory: backend
+        run: |
+          npx jest --coverage --forceExit --detectOpenHandles \
+            --reporters=default \
+            --reporters=jest-junit
         env:
           JWT_SECRET: test_secret_for_ci
           MONGO_URI: mongodb://localhost/test
           RABBITMQ_URL: amqp://localhost
+          JEST_JUNIT_OUTPUT_DIR: reports
+          JEST_JUNIT_OUTPUT_NAME: junit.xml
 
-      # 5. Запускаємо тести з покриттям + junit.xml
-      - name: Run tests with coverage
-        working-directory: backend
-        run: npm run test:ci
-        env:
-          JWT_SECRET: test_secret_for_ci
-          MONGO_URI: mongodb://localhost/test
-          RABBITMQ_URL: amqp://localhost
-
-      # 6. Зберігаємо HTML звіт покриття
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
         if: always()
@@ -56,7 +57,6 @@ jobs:
           path: backend/coverage/
           retention-days: 30
 
-      # 7. Зберігаємо junit.xml
       - name: Upload JUnit XML report
         uses: actions/upload-artifact@v4
         if: always()
@@ -65,7 +65,6 @@ jobs:
           path: backend/reports/junit.xml
           retention-days: 30
 
-      # 8. SonarCloud (лише для main та PR)
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
