@@ -24,6 +24,10 @@ jobs:
         working-directory: backend
         run: npm install
 
+      - name: Fix jest permissions
+        working-directory: backend
+        run: chmod +x node_modules/.bin/jest
+
       - name: Create reports directory
         run: mkdir -p backend/reports
 
