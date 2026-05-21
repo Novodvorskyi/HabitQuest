@@ -29,7 +29,7 @@ jobs:
 
       - name: Run tests with coverage
         working-directory: backend
-        run: node node_modules/.bin/jest --coverage --forceExit --detectOpenHandles --reporters=default --reporters=jest-junit
+        run: npx jest --coverage --forceExit --detectOpenHandles --reporters=default --reporters=jest-junit
         env:
           JWT_SECRET: test_secret_for_ci
           MONGO_URI: mongodb://localhost/test
