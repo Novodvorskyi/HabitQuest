@@ -105,3 +105,87 @@ describe('UserRepository.addFrame()', () => {
     );
   });
 });
+
+describe('UserRepository.findById()', () => {
+  test('викликає findById з правильним id', async () => {
+    User.findById.mockResolvedValue({ _id: 'u1', nickname: 'Test' });
+    const result = await UserRepository.findById('u1');
+    expect(User.findById).toHaveBeenCalledWith('u1');
+    expect(result.nickname).toBe('Test');
+  });
+
+  test('повертає null якщо не знайдено', async () => {
+    User.findById.mockResolvedValue(null);
+    const result = await UserRepository.findById('bad');
+    expect(result).toBeNull();
+  });
+});
+
+describe('UserRepository.findByNicknameExcept()', () => {
+  test('шукає з виключенням id', async () => {
+    User.findOne.mockResolvedValue(null);
+    await UserRepository.findByNicknameExcept('Nick', 'excludeId');
+    expect(User.findOne).toHaveBeenCalledWith({
+      nickname: 'Nick', _id: { $ne: 'excludeId' }
+    });
+  });
+});
+
+describe('UserRepository.incrementStat()', () => {
+  test('інкрементує поле на 1', async () => {
+    User.findByIdAndUpdate.mockResolvedValue(true);
+    await UserRepository.incrementStat('u1', 'totalTasksDone');
+    expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
+      'u1', { $inc: { totalTasksDone: 1 } }
+    );
+  });
+});
+
+describe('UserRepository.setActiveFrame()', () => {
+  test('встановлює activeFrame', async () => {
+    User.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    await UserRepository.setActiveFrame('u1', 'gold');
+    expect(User.updateOne).toHaveBeenCalledWith(
+      { _id: 'u1' }, { $set: { activeFrame: 'gold' } }
+    );
+  });
+});
+
+describe('UserRepository.searchByNickname()', () => {
+  test('шукає за regex і виключає поточного користувача', async () => {
+    const limited = { limit: jest.fn().mockResolvedValue([]) };
+    User.find.mockReturnValue(limited);
+    await UserRepository.searchByNickname('test', 'u1');
+    expect(User.find).toHaveBeenCalledWith({
+      _id: { $ne: 'u1' },
+      nickname: { $regex: 'test', $options: 'i' }
+    });
+    expect(limited.limit).toHaveBeenCalledWith(10);
+  });
+});
+
+describe('UserRepository.addFollowing()', () => {
+  test('додає в following і followers одночасно', async () => {
+    User.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    await UserRepository.addFollowing('myId', 'targetId');
+    expect(User.updateOne).toHaveBeenCalledWith(
+      { _id: 'myId' }, { $addToSet: { following: 'targetId' } }
+    );
+    expect(User.updateOne).toHaveBeenCalledWith(
+      { _id: 'targetId' }, { $addToSet: { followers: 'myId' } }
+    );
+  });
+});
+
+describe('UserRepository.removeFollowing()', () => {
+  test('видаляє з following і followers', async () => {
+    User.updateOne.mockResolvedValue({ modifiedCount: 1 });
+    await UserRepository.removeFollowing('myId', 'targetObjId', 'targetId', 'myObjId');
+    expect(User.updateOne).toHaveBeenCalledWith(
+      { _id: 'myId' }, { $pull: { following: 'targetObjId' } }
+    );
+    expect(User.updateOne).toHaveBeenCalledWith(
+      { _id: 'targetId' }, { $pull: { followers: 'myObjId' } }
+    );
+  });
+});
