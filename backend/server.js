@@ -9,6 +9,7 @@ require('dotenv').config();
 const express    = require('express');
 const mongoose   = require('mongoose');
 const cors       = require('cors');
+const helmet     = require('helmet');
 const swaggerUi  = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -25,9 +26,11 @@ const shopCtrl    = require('./controllers/shopController');
 const historyCtrl = require('./controllers/historyController');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
 app.use(express.json({ limit: '5mb' }));
-const helmet = require('helmet');
 app.use(helmet());
 
 /* ══ Swagger ══ */
