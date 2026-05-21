@@ -34,13 +34,17 @@ jobs:
 
       - name: Run tests with coverage
         working-directory: backend
-        run: npx jest --coverage --forceExit --detectOpenHandles --reporters=default --reporters=jest-junit
+        run: npx jest --coverage --ci --coverageDirectory=coverage --forceExit --detectOpenHandles --reporters=default --reporters=jest-junit
         env:
           JWT_SECRET: test_secret_for_ci
           MONGO_URI: mongodb://localhost/test
           RABBITMQ_URL: amqp://localhost
           JEST_JUNIT_OUTPUT_DIR: reports
           JEST_JUNIT_OUTPUT_NAME: junit.xml
+
+      - name: Verify coverage exists
+        working-directory: backend
+        run: ls -R coverage
 
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
