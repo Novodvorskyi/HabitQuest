@@ -42,6 +42,10 @@ jobs:
           JEST_JUNIT_OUTPUT_DIR: reports
           JEST_JUNIT_OUTPUT_NAME: junit.xml
 
+      - name: Fix LCOV paths for SonarCloud (Windows -> Linux compatibility)
+        working-directory: backend
+        run: sed -i 's#\\#/#g' coverage/lcov.info
+
       - name: Verify coverage exists
         working-directory: backend
         run: ls -R coverage
