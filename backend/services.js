@@ -24,7 +24,7 @@ function calcLevel(xp) {
    Нараховує XP і монети одночасно */
 async function startXPService() {
   await subscribe('xp_service_queue', ['item.completed'], async (routingKey, payload) => {
-    const { userId, difficulty, type } = payload;
+    const { userId, difficulty } = payload;
     const xpGain   = XP_TABLE[difficulty]   || 10;
     const coinGain = COIN_TABLE[difficulty]  || 5;
 
