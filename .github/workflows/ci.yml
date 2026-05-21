@@ -63,6 +63,10 @@ jobs:
           ls -R coverage
           head -20 coverage/lcov.info
 
+      - name: Show full lcov.info content
+        working-directory: backend
+        run: cat coverage/lcov.info
+
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
         if: always()
