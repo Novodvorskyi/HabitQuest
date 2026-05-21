@@ -48,6 +48,10 @@ jobs:
         working-directory: backend
         run: sed -i 's#\\#/#g' coverage/lcov.info
 
+      - name: Fix LCOV paths (remove backend/ prefix)
+        working-directory: backend
+        run: sed -i 's#SF:backend/#SF:#g' coverage/lcov.info
+
       - name: Verify coverage exists
         working-directory: backend
         run: ls -R coverage
