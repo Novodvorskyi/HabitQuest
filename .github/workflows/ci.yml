@@ -29,7 +29,8 @@ jobs:
         run: chmod +x node_modules/.bin/jest
 
       - name: Create reports directory
-        run: mkdir -p backend/reports
+        working-directory: backend
+        run: mkdir -p reports
 
       - name: Run tests with coverage
         working-directory: backend
