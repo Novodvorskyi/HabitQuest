@@ -50,6 +50,13 @@ jobs:
         working-directory: backend
         run: ls -R coverage
 
+      - name: Check coverage before Sonar
+        working-directory: backend
+        run: |
+          echo "LCOV check:"
+          ls -R coverage
+          head -20 coverage/lcov.info
+
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
         if: always()
