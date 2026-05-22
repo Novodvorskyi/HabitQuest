@@ -2,6 +2,10 @@
 
 > Веб-застосунок для відстеження звичок та завдань з системою XP, рівнів, монет і магазином рамок. Побудований на подієво-орієнтованій архітектурі з брокером повідомлень RabbitMQ.
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Novodvorskyi_HabitQuest&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Novodvorskyi_HabitQuest)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Novodvorskyi_HabitQuest&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Novodvorskyi_HabitQuest)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Novodvorskyi_HabitQuest&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=Novodvorskyi_HabitQuest)
+
 ---
 
 ## Стек технологій
@@ -16,7 +20,7 @@
 | Документація API | Swagger (OpenAPI 3.0) |
 | Тести | Jest + Supertest |
 | Контейнеризація | Docker, Docker Compose |
-| CI/CD | GitHub Actions |
+| CI/CD | GitHub Actions + SonarCloud |
 
 ---
 
@@ -61,17 +65,43 @@ habitquest/
 │   └── tests/
 │       ├── unit/
 │       │   ├── constants.test.js
-│       │   └── userRepository.test.js
+│       │   ├── userRepository.test.js
+│       │   ├── habitRepository.test.js
+│       │   ├── taskRepository.test.js
+│       │   ├── broker.test.js
+│       │   └── services.test.js
 │       └── integration/
 │           └── api.test.js
 │
+├── docs/
+│   └── diagrams/              ← UML діаграми
+│
+├── .cursor/
+│   └── rules/
+│       ├── architecture.md    ← Опис архітектури для AI
+│       └── testing_strategy.md← Стратегія тестування для AI
+│
+├── .cursorrules               ← Глобальні правила для AI
 ├── .github/
 │   └── workflows/
 │       └── ci.yml             ← GitHub Actions CI/CD
 │
+├── sonar-project.properties   ← SonarCloud конфігурація
 ├── docker-compose.yml
 └── README.md
 ```
+
+---
+
+## Якість коду (SonarCloud)
+
+| Метрика | Значення |
+|---------|---------|
+| Coverage | 85%+ |
+| Tests | 200+ |
+| Bugs & Vulnerabilities | 0 |
+| Code Smells | A |
+| Duplications | 0% |
 
 ---
 
@@ -128,7 +158,7 @@ docker-compose logs -f backend
 cd backend
 npm install
 
-# 2. Створи .env файл (якщо ще немає)
+# 2. Створи .env файл
 # (вміст дивись нижче)
 
 # 3. Запусти
@@ -142,6 +172,7 @@ PORT=5000
 MONGO_URI=mongodb://localhost:27017/habitquest
 JWT_SECRET=supersecretkey123
 RABBITMQ_URL=amqp://localhost
+CORS_ORIGIN=http://localhost:3000
 ```
 
 ---
@@ -151,8 +182,6 @@ RABBITMQ_URL=amqp://localhost
 Після запуску backend відкрий у браузері:
 
 **http://localhost:5000/api-docs**
-
-Там доступний повний Swagger UI з усіма ендпоінтами.
 
 ### Короткий огляд ендпоінтів
 
@@ -169,6 +198,8 @@ RABBITMQ_URL=amqp://localhost
 | POST | `/api/habits/:id/complete` | Виконати звичку |
 | GET | `/api/tasks` | Список завдань |
 | POST | `/api/tasks` | Створити завдання |
+| PUT | `/api/tasks/:id` | Оновити завдання |
+| DELETE | `/api/tasks/:id` | Видалити завдання |
 | POST | `/api/tasks/:id/complete` | Виконати завдання (видаляється) |
 | GET | `/api/shop/frames` | Рамки магазину |
 | POST | `/api/shop/buy/:frameId` | Купити рамку |
@@ -189,9 +220,24 @@ npm test
 
 # Тести з покриттям коду
 npm run test:coverage
+
+# CI режим (з junit.xml звітом)
+npm run test:ci
 ```
 
 Тести не потребують запущеної MongoDB або RabbitMQ — всі зовнішні залежності замокані.
+
+### Структура тестів
+
+| Файл | Тип | Що тестує |
+|------|-----|-----------|
+| `tests/integration/api.test.js` | Інтеграційний | Всі HTTP ендпоінти |
+| `tests/unit/constants.test.js` | Модульний | XP, монети, рівні, рамки |
+| `tests/unit/userRepository.test.js` | Модульний | UserRepository методи |
+| `tests/unit/habitRepository.test.js` | Модульний | HabitRepository методи |
+| `tests/unit/taskRepository.test.js` | Модульний | TaskRepository методи |
+| `tests/unit/broker.test.js` | Модульний | RabbitMQ обгортка |
+| `tests/unit/services.test.js` | Модульний | XP/Level/Log сервіси |
 
 ---
 
@@ -240,8 +286,17 @@ npm run test:coverage
 При кожному `git push` GitHub Actions автоматично:
 1. Встановлює Node.js 20
 2. Запускає `npm install`
-3. Запускає всі тести
-4. При push в `main` — генерує звіт покриття
+3. Запускає всі тести та генерує coverage звіт
+4. Завантажує HTML/XML артефакти (доступні для завантаження 30 днів)
+5. При push в `main` — відправляє результати в SonarCloud
 
-Статус можна бачити у вкладці **Actions** на GitHub.
-trigger CI
+### Артефакти після кожного запуску
+
+- `coverage-html-report.zip` — HTML звіт покриття з візуальним відображенням непокритих рядків
+- `junit-xml-report.zip` — JUnit XML звіт для інтеграції з SonarCloud
+
+### Branch Protection
+
+Гілка `main` захищена — PR не можна злити якщо:
+- Pipeline червоний
+- Quality Gate провалено (coverage < 70%)
